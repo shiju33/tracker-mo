@@ -1,0 +1,818 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>My Money Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400..700&display=swap">
+<style>
+/* Layout: a bookkeeper's ledger. Summary strip on top, month entry form on the left, year chart and 12-month ledger on the right; saving a month prints a till-slip receipt. */
+:root{
+  --bg:#EDF1EC; --surface:#F8FAF6; --surface-2:#E1E8E0; --ink:#12231C; --muted:#56675E; --line:#C5D0C7;
+  --accent:#0E5A43; --accent-ink:#F4FBF7; --warn:#A33A1E;
+  --c-ins:#2B63D9; --c-edu:#C23A78; --c-ret:#7446C9; --c-inv:#0E8F7A; --c-gold:#A67C00; --c-land:#8A5A3C;
+  --paper:#FCFCFA; --paper-ink:#1B1F1D; --paper-line:#8B918D; --shade:rgba(10,18,14,.55);
+  --f-display:'Bricolage Grotesque','Instrument Sans',system-ui,sans-serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'Courier New',monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1512; --surface:#141E1A; --surface-2:#1E2B25; --ink:#E3EDE7; --muted:#97AAA0; --line:#2B3A33;
+    --accent:#5ED1A2; --accent-ink:#06130D; --warn:#FF8A6B;
+    --c-ins:#76A4FF; --c-edu:#F58AB5; --c-ret:#B496FF; --c-inv:#4FD3BD; --c-gold:#E8C547; --c-land:#C99A76;
+    --paper:#E8EBE6; --paper-ink:#161A18; --paper-line:#6C736F; --shade:rgba(0,0,0,.65);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1512; --surface:#141E1A; --surface-2:#1E2B25; --ink:#E3EDE7; --muted:#97AAA0; --line:#2B3A33;
+  --accent:#5ED1A2; --accent-ink:#06130D; --warn:#FF8A6B;
+  --c-ins:#76A4FF; --c-edu:#F58AB5; --c-ret:#B496FF; --c-inv:#4FD3BD; --c-gold:#E8C547; --c-land:#C99A76;
+  --paper:#E8EBE6; --paper-ink:#161A18; --paper-line:#6C736F; --shade:rgba(0,0,0,.65);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+h1,h2,h3,p{margin:0}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.app{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 56px;display:flex;flex-direction:column;gap:20px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:36px;height:36px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:20px}
+.brand h1{font-family:var(--f-display);font-size:24px;font-weight:700;letter-spacing:-.01em}
+.fy{display:flex;align-items:center;gap:6px}
+.fylabel{display:flex;flex-direction:column;align-items:center;min-width:110px;line-height:1.2}
+.fylabel strong{font-family:var(--f-display);font-size:17px}
+.fylabel span{font-size:12px;color:var(--muted)}
+.iconbtn{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:20px;line-height:1}
+.iconbtn:hover{background:var(--surface-2)}
+
+/* summary strip */
+.summary{display:grid;grid-template-columns:minmax(230px,1fr) 2fr;gap:20px 32px;padding-block:18px;border-block:1px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sum-big{font-family:var(--f-display);font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin-top:4px}
+.sum-sub{color:var(--muted);font-size:13.5px;margin-top:4px}
+.sum-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px 20px;align-content:center}
+.sum-item{min-width:0}
+.sum-item .nm{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}
+.sum-item .vl{font-family:var(--f-display);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.chipdot{width:10px;height:10px;border-radius:3px;flex:none}
+.ins{--c:var(--c-ins)} .edu{--c:var(--c-edu)} .ret{--c:var(--c-ret)} .inv{--c:var(--c-inv)} .gold{--c:var(--c-gold)} .land{--c:var(--c-land)}
+.sum-groups{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sum-groups .eyebrow{margin-bottom:8px}
+.sp{--c:var(--muted)}
+.neg{color:var(--warn)}
+.sec{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.live.ok{color:var(--accent);font-weight:600}
+.live.bal{font-weight:600}
+.chipdot,.seg{background:var(--c)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:350px minmax(0,1fr);gap:24px;align-items:start}
+.col-form{position:static}
+.col-main{display:flex;flex-direction:column;gap:24px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;margin-bottom:12px}
+.panel-head h2{font-family:var(--f-display);font-size:20px;font-weight:700}
+.status{font-size:12.5px;font-weight:600;color:var(--muted)}
+.status.ok{color:var(--accent)}
+
+/* month chips */
+.chips{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:16px}
+.chip{position:relative;height:38px;border-radius:7px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:13px;font-weight:500}
+.chip:hover{background:var(--surface-2)}
+.chip.has::after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"].has::after{background:var(--accent-ink)}
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label,.brow label{font-size:13.5px;font-weight:600}
+.money{position:relative}
+.money span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.money input{width:100%;height:44px;padding:0 12px 0 28px;border:1px solid var(--line);background:var(--bg);border-radius:8px;font-variant-numeric:tabular-nums}
+.money input::placeholder{color:var(--muted);opacity:.6}
+.hint{font-size:12.5px;color:var(--muted)}
+.buckets{display:flex;flex-direction:column;gap:10px;padding-block:14px;border-block:1px dashed var(--line);margin-bottom:14px}
+.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center}
+.brow .nm{display:flex;align-items:center;gap:7px}
+.brow .hint{margin-left:17px;margin-top:1px}
+.live{font-size:14px;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.live.bad{color:var(--warn)}
+.err{color:var(--warn);font-size:13.5px;min-height:0;margin-bottom:8px}
+.err:empty{display:none}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.btn{height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.primary{flex:1 1 100%}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--warn)}
+.btn:disabled{opacity:.55;cursor:default}
+.plan{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.plan summary{cursor:pointer;font-weight:600;font-size:14px}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-block:12px}
+.plan-grid .money input{padding-right:28px}
+.plan-grid .money .suf{left:auto;right:12px}
+.plan-grid label{font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.plan-total{font-size:13.5px;margin-bottom:10px}
+.plan-total.bad{color:var(--warn)}
+
+/* chart */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.chart{display:grid;grid-template-columns:46px minmax(0,1fr);gap:0 8px;margin-top:6px}
+.yaxis{position:relative;height:210px}
+.yaxis span{position:absolute;right:0;transform:translateY(50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.plot{position:relative;height:210px;display:flex;gap:6px}
+.gl{position:absolute;left:0;right:0;border-top:1px solid var(--line);pointer-events:none}
+.bcol{position:relative;flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center;background:none;border:0;padding:0;cursor:pointer}
+.bcol.sel::before{content:"";position:absolute;inset:0;background:var(--surface-2);border-radius:6px}
+.stack{position:relative;width:min(100%,34px);display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden}
+.stub{position:relative;width:min(100%,34px);height:3px;background:var(--line);border-radius:2px}
+.xaxis{grid-column:2;display:flex;gap:6px;margin-top:6px}
+.xaxis span{flex:1;min-width:0;text-align:center;font-size:11.5px;color:var(--muted)}
+.xaxis span.sel{color:var(--ink);font-weight:700}
+.demo-banner{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;border:1px solid var(--line);font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ledger */
+.ledger-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.ledger-head h2,.chart-head h2{font-family:var(--f-display);font-size:20px;font-weight:700}
+.chart-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px;margin-bottom:10px}
+.btn.sm{height:36px;padding:0 12px;font-size:13px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:1280px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
+thead th .chipdot{display:inline-block;margin-right:5px}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.sel{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+td.none{color:var(--muted)}
+tr.eg td{font-style:italic;color:var(--muted)}
+tfoot td{font-weight:700;border-bottom:0;background:var(--bg)}
+.link{background:none;border:0;padding:4px 0;color:var(--accent);font-weight:600;cursor:pointer;font-size:13.5px;text-decoration:underline;text-underline-offset:3px}
+.note{font-size:12.5px;color:var(--muted)}
+
+/* receipt overlay */
+.overlay{position:fixed;inset:0;z-index:20;background:var(--shade);overflow-y:auto;display:flex;justify-content:center;align-items:flex-start;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.sheet{width:min(100%,390px);display:flex;flex-direction:column;gap:12px}
+.rcpt-actions{display:flex;flex-wrap:wrap;gap:8px}
+.rcpt-actions .btn{flex:1 1 auto}
+.rcpt-actions .btn.ghost{background:var(--surface);border-color:var(--line)}
+.rnote{font-size:12.5px;color:#fff;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px}
+.receipt{position:relative;background:var(--paper);color:var(--paper-ink);font-family:var(--f-mono);font-size:13px;line-height:1.55;padding:24px 20px 26px;margin-bottom:10px}
+.receipt::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;background:var(--paper);-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 90deg,#0000 91deg) 50%/16px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 90deg,#0000 91deg) 50%/16px 100%}
+.r-c{text-align:center}
+.r-b{font-weight:600}
+.r-s{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}
+.r-rule{border-top:1px dashed var(--paper-line);margin-block:9px}
+.r-gap{height:8px}
+.r-p{margin-top:2px}
+.r-kv{display:flex;justify-content:space-between;gap:12px}
+.r-kv span:last-child{text-align:right;white-space:nowrap}
+.r-cols{display:grid;grid-template-columns:8ch 1fr 1fr;gap:6px}
+.r-cols span:nth-child(n+2){text-align:right}
+.r-h{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .col-form{position:static}
+  .summary{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:420px){
+  .sum-big{font-size:36px}
+  .brow{grid-template-columns:minmax(0,1fr) 116px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">₹</span><h1>My Money Plan</h1></div>
+    <div class="fy" role="group" aria-label="Plan year">
+      <button class="iconbtn" id="fyPrev" type="button" aria-label="Previous plan year">&#8249;</button>
+      <div class="fylabel"><strong id="fyLabel"></strong><span>April to March</span></div>
+      <button class="iconbtn" id="fyNext" type="button" aria-label="Next plan year">&#8250;</button>
+    </div>
+  </header>
+
+  <section class="summary" id="summary" aria-label="Plan year summary"></section>
+
+  <div class="layout">
+    <aside class="col-form">
+      <form class="panel" id="form" novalidate>
+        <div class="panel-head"><h2 id="formTitle">Month</h2><span class="status" id="formStatus"></span></div>
+        <div class="chips" id="chips" role="group" aria-label="Choose month"></div>
+        <div class="field">
+          <label for="salary">Salary credited</label>
+          <div class="money"><span>₹</span><input id="salary" type="number" inputmode="numeric" min="0" step="any" placeholder="0"></div>
+        </div>
+        <div class="field">
+          <label for="total">Total saving this month</label>
+          <div class="money"><span>₹</span><input id="total" type="number" inputmode="numeric" min="0" step="any" placeholder="0"></div>
+          <p class="hint">Splits into the four boxes using your plan. You can change any box.</p>
+        </div>
+        <div class="buckets" id="buckets"></div>
+        <p class="live" id="live"></p>
+        <p class="sec">Spending from the rest of your salary</p>
+        <div class="buckets" id="spends"></div>
+        <p class="live" id="bal"></p>
+        <p class="err" id="formMsg" role="alert"></p>
+        <div class="actions">
+          <button class="btn primary" id="saveBtn" type="submit">Save month and get receipt</button>
+          <button class="btn" id="viewRcpt" type="button" hidden>View receipt</button>
+          <button class="btn ghost danger" id="delBtn" type="button" hidden>Delete month</button>
+        </div>
+        <details class="plan" id="planBox">
+          <summary>Split of my saving</summary>
+          <div class="plan-grid" id="planGrid"></div>
+          <p class="plan-total" id="planTotal"></p>
+          <p class="err" id="planMsg" role="alert"></p>
+          <button class="btn sm" id="planSave" type="button">Save split</button>
+        </details>
+      </form>
+    </aside>
+
+    <main class="col-main">
+      <section class="panel" aria-labelledby="chartTitle">
+        <div class="chart-head">
+          <h2 id="chartTitle">Saved each month</h2>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div id="demoBanner"></div>
+        <div class="chart" id="chart"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="ledgerTitle">
+        <div class="ledger-head">
+          <h2 id="ledgerTitle">Year ledger</h2>
+          <button class="btn sm" id="yearRcpt" type="button">Year receipt</button>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+            <tfoot id="tfoot"></tfoot>
+          </table>
+        </div>
+        <p class="note" id="storeNote" style="margin-top:10px"></p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rcptTitle">
+    <h2 class="sr" id="rcptTitle">Receipt</h2>
+    <div class="rcpt-actions">
+      <button class="btn primary" id="rSave" type="button">Save receipt to print</button>
+      <button class="btn ghost" id="rCopy" type="button">Copy text</button>
+      <button class="btn ghost" id="rClose" type="button">Close</button>
+    </div>
+    <p class="rnote" id="rNote">The saved file opens in your browser. Press its Print button for a paper copy.</p>
+    <div class="receipt" id="receipt"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=(s)=>document.querySelector(s);
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const B=[
+  {k:'ins',name:'Insurance',long:'Insurance premium',hint:'Term life and health cover'},
+  {k:'edu',name:'Baby education',long:'Baby education fund',hint:'Child plan, school and college fund'},
+  {k:'ret',name:'Retirement',long:'Retirement fund',hint:'EPF, PPF or NPS'},
+  {k:'inv',name:'Investment',long:'Investment (SIP)',hint:'Mutual fund SIPs and other investing'},
+  {k:'gold',name:'Gold',long:'Gold investment',hint:'Gold bonds, gold ETF or coins'},
+  {k:'land',name:'Land',long:'Land investment',hint:'Plot, land or property fund'}
+];
+const DEFAULT_PLAN={ins:10,edu:20,ret:20,inv:25,gold:15,land:10};
+function normPlan(p){
+  const o=Object.assign({},DEFAULT_PLAN,p||{});
+  if(p&&p.gold===undefined&&p.land===undefined){o.gold=0;o.land=0}
+  return o;
+}
+const LS_KEY='my-money-plan-v1';
+const NUM=new Intl.NumberFormat('en-IN',{maximumFractionDigits:0});
+const money=(n)=>'₹'+NUM.format(Math.round(n||0));
+const num=(v)=>{const n=parseFloat(v);return isFinite(n)&&n>0?n:0};
+const sumRec=(r)=>B.reduce((a,b)=>a+(+r[b.k]||0),0);
+const S=[
+  {k:'trv',name:'Travel',long:'Travel',hint:'Bus, fuel and trips'},
+  {k:'chu',name:'Church',long:'Church',hint:'Offering and giving'},
+  {k:'mar',name:'Marriage',long:'Marriage',hint:'Gifts and function costs'},
+  {k:'veg',name:'Vegetables',long:'Vegetables',hint:'Market, vegetables and fruit'},
+  {k:'food',name:'Food',long:'Food',hint:'Meals, groceries and eating out'}
+];
+const sumS=(r)=>S.reduce((a,s)=>a+(+r[s.k]||0),0);
+const signed=(n)=>n>0?'+'+money(n):(n<0?'-'+money(-n):money(0));
+function balNote(bal){
+  if(bal===0)return 'Matched. Every rupee of the salary is accounted for.';
+  if(bal>0)return 'Plus '+money(bal)+'. This much of the salary is left over and is not saved or listed under spending.';
+  return 'Minus '+money(-bal)+'. Saving and spending together are more than the salary credited.';
+}
+const pctOf=(a,b)=>b>0?(a/b*100).toFixed(1).replace(/\.0$/,'')+'%':'0%';
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const reduceMotion=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function curFy(d){d=d||new Date();return d.getMonth()>=3?d.getFullYear():d.getFullYear()-1}
+function fyLabel(fy){return 'FY '+fy+'–'+String(fy+1).slice(2)}
+function fyMonths(fy){
+  return Array.from({length:12},(_,i)=>{
+    const m=(3+i)%12,y=fy+(3+i>=12?1:0);
+    return {key:y+'-'+String(m+1).padStart(2,'0'),y:y,m:m,short:MN[m],full:MF[m]};
+  });
+}
+function monthInfo(key){const p=key.split('-');const y=+p[0],m=+p[1]-1;return {key:key,y:y,m:m,short:MN[m],full:MF[m]}}
+function keyNow(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+
+const st={fy:curFy(),sel:null,records:{},plan:Object.assign({},DEFAULT_PLAN),loaded:false,mode:'pending',col:null,dl:null,busy:false,delArmed:false,rcpt:null,opener:null};
+
+/* ---------- storage ---------- */
+function loadLocal(){
+  try{const j=JSON.parse(localStorage.getItem(LS_KEY)||'null');if(j){st.records=j.records||{};st.plan=normPlan(j.plan)}}catch(e){}
+}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify({records:st.records,plan:st.plan}))}catch(e){}}
+async function persistMonth(key,rec){
+  if(st.mode==='db'){await st.col.doc('m-'+key).set(rec)}
+  st.records[key]=rec;
+  if(st.mode!=='db')saveLocal();
+}
+async function removeMonth(key){
+  if(st.mode==='db'){await st.col.doc('m-'+key).delete()}
+  delete st.records[key];
+  if(st.mode!=='db')saveLocal();
+}
+async function persistPlan(plan){
+  if(st.mode==='db'){await st.col.doc('settings').set(plan)}
+  st.plan=plan;
+  if(st.mode!=='db')saveLocal();
+}
+
+/* ---------- data views ---------- */
+function demoFor(fy){
+  const out={};
+  fyMonths(fy).slice(0,6).forEach((mo,i)=>{
+    out[mo.key]={salary:i>=4?57000:54000,ins:3000,edu:4000+i*500,ret:4000,inv:5000+i*500,gold:2000,land:1500,trv:i===1?5500:3500,chu:2500,mar:i===2?14000:3000,veg:4500,food:12000,demo:true};
+  });
+  return out;
+}
+function view(){
+  const months=fyMonths(st.fy);
+  const any=Object.keys(st.records).length>0;
+  const demo=st.loaded&&!any;
+  return {months:months,recs:demo?demoFor(st.fy):st.records,demo:demo};
+}
+function totals(v){
+  const t={n:0,sal:0,saved:0,spent:0,bal:0};
+  B.forEach((b)=>{t[b.k]=0});
+  S.forEach((s)=>{t[s.k]=0});
+  v.months.forEach((mo)=>{const r=v.recs[mo.key];if(!r)return;t.n++;t.sal+=+r.salary||0;B.forEach((b)=>{t[b.k]+=+r[b.k]||0});S.forEach((s)=>{t[s.k]+=+r[s.k]||0});});
+  t.saved=B.reduce((a,b)=>a+t[b.k],0);
+  t.spent=S.reduce((a,s)=>a+t[s.k],0);
+  t.bal=t.sal-t.saved-t.spent;
+  return t;
+}
+function splitAmount(t,plan){
+  const out={};let used=0;
+  B.forEach((b)=>{if(b.k==='inv')return;out[b.k]=Math.floor(t*(plan[b.k]||0)/100);used+=out[b.k]});
+  out.inv=t-used;
+  return out;
+}
+
+/* ---------- render ---------- */
+function renderAll(){renderHeader();renderSummary();renderChips();renderChart();renderLedger();renderStoreNote()}
+function renderHeader(){$('#fyLabel').textContent=fyLabel(st.fy)}
+function renderSummary(){
+  const v=view(),t=totals(v);
+  const main=st.loaded
+    ? '<div class="eyebrow">Saved this plan year'+(v.demo?' (example)':'')+'</div><div class="sum-big">'+money(t.saved)+'</div><div class="sum-sub">'+(t.n?pctOf(t.saved,t.sal)+' of '+money(t.sal)+' salary · '+t.n+' of 12 months recorded':'No months recorded yet')+'</div>'
+    : '<div class="eyebrow">Saved this plan year</div><div class="sum-big">—</div><div class="sum-sub">Opening your book</div>';
+  const split=B.map((b)=>'<div class="sum-item '+b.k+'"><div class="nm"><span class="chipdot"></span>'+b.name+'</div><div class="vl">'+money(st.loaded?t[b.k]:0)+'</div></div>').join('');
+  const split2=S.map((s)=>'<div class="sum-item sp"><div class="nm"><span class="chipdot"></span>'+s.name+'</div><div class="vl">'+money(st.loaded?t[s.k]:0)+'</div></div>').join('');
+  const balItem='<div class="sum-item"><div class="nm">Balance</div><div class="vl'+(t.bal<0?' neg':'')+'">'+(st.loaded?signed(t.bal):'—')+'</div></div>';
+  $('#summary').innerHTML='<div>'+main+'</div><div class="sum-groups"><div><div class="eyebrow">Saved</div><div class="sum-split">'+split+'</div></div><div><div class="eyebrow">Spent, and balance of salary</div><div class="sum-split">'+split2+balItem+'</div></div></div>';
+}
+function renderChips(){
+  const v=view();
+  $('#chips').innerHTML=v.months.map((mo)=>{
+    const has=!!st.records[mo.key];
+    return '<button type="button" class="chip'+(has?' has':'')+'" data-key="'+mo.key+'" aria-pressed="'+(st.sel===mo.key)+'" aria-label="'+mo.full+' '+mo.y+(has?', recorded':'')+'">'+mo.short+'</button>';
+  }).join('');
+}
+function niceTop(max){
+  if(max<=0)return {top:20000,step:5000};
+  const raw=max/4,e=Math.pow(10,Math.floor(Math.log10(raw)));
+  const c=[1,2,2.5,5,10];let step=10*e;
+  for(let i=0;i<c.length;i++){if(c[i]*e>=raw){step=c[i]*e;break}}
+  return {top:step*4,step:step};
+}
+function tickLabel(n){
+  if(n===0)return '₹0';
+  if(n>=100000)return '₹'+(+(n/100000).toFixed(2))+'L';
+  if(n>=1000)return '₹'+(+(n/1000).toFixed(1))+'k';
+  return '₹'+n;
+}
+function renderChart(){
+  $('#legend').innerHTML=B.map((b)=>'<span class="'+b.k+'"><i class="chipdot"></i>'+b.name+'</span>').join('');
+  const v=view();
+  $('#demoBanner').innerHTML=v.demo?'<div class="demo-banner"><span class="pill">Example</span><span>These are example figures. Save your first month and they disappear.</span></div>':'';
+  let max=0;
+  v.months.forEach((mo)=>{const r=v.recs[mo.key];if(r)max=Math.max(max,sumRec(r))});
+  const nt=niceTop(max),top=nt.top;
+  let y='',grid='';
+  for(let i=0;i<=4;i++){
+    const p=i*25;
+    y+='<span style="bottom:'+p+'%">'+tickLabel(top/4*i)+'</span>';
+    if(i>0)grid+='<div class="gl" style="bottom:'+p+'%"></div>';
+  }
+  const cols=v.months.map((mo)=>{
+    const r=v.recs[mo.key],sel=st.sel===mo.key?' sel':'';
+    if(!r)return '<button type="button" class="bcol'+sel+'" data-key="'+mo.key+'" aria-label="'+mo.full+': nothing recorded"><span class="stub"></span></button>';
+    const tot=sumRec(r);
+    const segs=B.map((b)=>{const val=+r[b.k]||0;return val>0?'<div class="seg '+b.k+'" style="height:'+(val/tot*100)+'%"></div>':''}).join('');
+    return '<button type="button" class="bcol'+sel+'" data-key="'+mo.key+'" title="'+mo.full+': '+money(tot)+' saved" aria-label="'+mo.full+': '+money(tot)+' saved"><div class="stack" style="height:'+(tot/top*100)+'%">'+segs+'</div></button>';
+  }).join('');
+  const xs=v.months.map((mo)=>'<span class="'+(st.sel===mo.key?'sel':'')+'">'+mo.short+'</span>').join('');
+  $('#chart').innerHTML='<div class="yaxis" aria-hidden="true">'+y+'</div><div class="plot">'+grid+cols+'</div><div class="xaxis" aria-hidden="true">'+xs+'</div>';
+}
+function renderLedger(){
+  $('#thead').innerHTML='<tr><th>Month</th><th>Salary</th>'+B.map((b)=>'<th class="'+b.k+'"><i class="chipdot"></i>'+b.name+'</th>').join('')+'<th>Saved</th><th>Spent</th><th>Balance</th><th>Rate</th><th></th></tr>';
+  if(!st.loaded){
+    $('#tbody').innerHTML='<tr><td colspan="'+(B.length+7)+'" class="none">Opening your book…</td></tr>';
+    $('#tfoot').innerHTML='';
+    return;
+  }
+  const v=view();
+  $('#tbody').innerHTML=v.months.map((mo)=>{
+    const r=v.recs[mo.key],sel=st.sel===mo.key?' sel':'';
+    const label=mo.short+' '+mo.y;
+    if(!r)return '<tr class="'+sel.trim()+'" data-key="'+mo.key+'"><td>'+label+'</td><td class="none" colspan="'+(B.length+5)+'">Not recorded</td><td><button type="button" class="link" data-act="add">Add</button></td></tr>';
+    const tot=sumRec(r),sp=sumS(r),bal=(+r.salary||0)-tot-sp;
+    const act=v.demo?'<span class="pill">Example</span>':'<button type="button" class="link" data-act="rcpt">Receipt</button>';
+    return '<tr class="'+(v.demo?'eg':'')+sel+'" data-key="'+mo.key+'"><td>'+label+'</td><td>'+money(r.salary)+'</td>'+B.map((b)=>'<td>'+money(r[b.k])+'</td>').join('')+'<td><strong>'+money(tot)+'</strong></td><td>'+money(sp)+'</td><td class="'+(bal<0?'neg':'')+'">'+signed(bal)+'</td><td>'+pctOf(tot,r.salary)+'</td><td>'+act+'</td></tr>';
+  }).join('');
+  const t=totals(v);
+  $('#tfoot').innerHTML='<tr><td>Total</td><td>'+money(t.sal)+'</td>'+B.map((b)=>'<td>'+money(t[b.k])+'</td>').join('')+'<td>'+money(t.saved)+'</td><td>'+money(t.spent)+'</td><td class="'+(t.bal<0?'neg':'')+'">'+signed(t.bal)+'</td><td>'+pctOf(t.saved,t.sal)+'</td><td></td></tr>';
+}
+function renderStoreNote(){
+  $('#storeNote').textContent=st.mode==='db'?'Your book is saved privately to your Claude account, so it is there on any device.':(st.mode==='local'?'Saved in this browser only. Open this page while signed in to Claude to keep your book on every device.':'');
+}
+
+/* ---------- form ---------- */
+const F={};
+function buildForm(){
+  $('#buckets').innerHTML=B.map((b)=>'<div class="brow '+b.k+'"><div><label class="nm" for="b-'+b.k+'"><span class="chipdot"></span>'+b.name+'</label><p class="hint">'+b.hint+'</p></div><div class="money"><span>₹</span><input id="b-'+b.k+'" type="number" inputmode="numeric" min="0" step="any" placeholder="0"></div></div>').join('');
+  $('#planGrid').innerHTML=B.map((b)=>'<div class="'+b.k+'"><label for="p-'+b.k+'"><span class="chipdot"></span>'+b.name+'</label><div class="money"><input id="p-'+b.k+'" type="number" inputmode="numeric" min="0" max="100" step="1"><span class="suf">%</span></div></div>').join('');
+  F.salary=$('#salary');F.total=$('#total');
+  B.forEach((b)=>{F[b.k]=$('#b-'+b.k);F['p'+b.k]=$('#p-'+b.k)});
+  $('#spends').innerHTML=S.map((s)=>'<div class="brow sp"><div><label class="nm" for="s-'+s.k+'"><span class="chipdot"></span>'+s.name+'</label><p class="hint">'+s.hint+'</p></div><div class="money"><span>₹</span><input id="s-'+s.k+'" type="number" inputmode="numeric" min="0" step="any" placeholder="0"></div></div>').join('');
+  S.forEach((s)=>{F[s.k]=$('#s-'+s.k)});
+}
+function fillForm(){
+  const key=st.sel,mo=monthInfo(key),rec=st.records[key];
+  $('#formTitle').textContent=mo.full+' '+mo.y;
+  const s=$('#formStatus');s.textContent=rec?'Recorded':'Not recorded yet';s.className='status'+(rec?' ok':'');
+  F.salary.value=rec?rec.salary:'';
+  B.forEach((b)=>{F[b.k].value=rec&&rec[b.k]?rec[b.k]:''});
+  S.forEach((s)=>{F[s.k].value=rec&&rec[s.k]?rec[s.k]:''});
+  F.total.value=rec?sumRec(rec):'';
+  $('#formMsg').textContent='';
+  $('#saveBtn').textContent=rec?'Update month and get receipt':'Save month and get receipt';
+  $('#viewRcpt').hidden=!rec;
+  const d=$('#delBtn');d.hidden=!rec;d.textContent='Delete month';st.delArmed=false;
+  updateLive();
+}
+function fillPlan(){
+  B.forEach((b)=>{F['p'+b.k].value=st.plan[b.k]});
+  updatePlanTotal();
+}
+function updateLive(){
+  const sal=num(F.salary.value),tot=B.reduce((a,b)=>a+num(F[b.k].value),0),sp=S.reduce((a,s)=>a+num(F[s.k].value),0);
+  const el=$('#live'),bl=$('#bal');
+  if(!sal&&!tot&&!sp){el.textContent='Enter salary and saving to see your savings rate.';el.className='live';bl.textContent='';bl.className='live';return}
+  const left=sal-tot;
+  el.textContent='Saving rate '+pctOf(tot,sal)+' · '+(left>=0?money(left)+' left after saving':money(-left)+' more than salary');
+  el.className='live'+(left<0?' bad':'');
+  const bal=sal-tot-sp;
+  bl.textContent='Balance '+signed(bal)+' · '+(bal===0?'matches your salary':(bal>0?'salary not yet listed':'over your salary'));
+  bl.className='live bal'+(bal===0?' ok':(bal<0?' bad':''));
+}
+function updatePlanTotal(){
+  const t=B.reduce((a,b)=>a+num(F['p'+b.k].value),0),el=$('#planTotal');
+  el.textContent='Total '+(+t.toFixed(2))+'% '+(t===100?'(ready to save)':'(needs to be 100%)');
+  el.className='plan-total'+(t===100?'':' bad');
+}
+function onTotalInput(){
+  const parts=splitAmount(num(F.total.value),st.plan);
+  B.forEach((b)=>{F[b.k].value=parts[b.k]>0?parts[b.k]:''});
+  updateLive();
+}
+function onBucketInput(){
+  const tot=B.reduce((a,b)=>a+num(F[b.k].value),0);
+  F.total.value=tot>0?tot:'';
+  updateLive();
+}
+function formMsg(t){$('#formMsg').textContent=t}
+async function onSave(e){
+  e.preventDefault();
+  if(st.busy)return;
+  const key=st.sel,salary=num(F.salary.value);
+  const rec={salary:salary};
+  B.forEach((b)=>{rec[b.k]=num(F[b.k].value)});
+  S.forEach((s)=>{rec[s.k]=num(F[s.k].value)});
+  const tot=sumRec(rec);
+  if(!(salary>0))return formMsg('Enter the salary credited this month.');
+  if(!(tot>0))return formMsg('Enter how much you saved, in the total box or in the four boxes.');
+  if(tot>salary)return formMsg('Saving of '+money(tot)+' is more than the salary of '+money(salary)+'. Check the amounts.');
+  rec.savedAt=Date.now();
+  st.busy=true;$('#saveBtn').disabled=true;formMsg('');
+  try{
+    await persistMonth(key,rec);
+    renderAll();fillForm();
+    openReceipt('month',key,$('#saveBtn'));
+  }catch(err){
+    formMsg('Could not save this month. Check your connection and try again.');
+  }finally{st.busy=false;$('#saveBtn').disabled=false}
+}
+async function onDelete(){
+  const key=st.sel;
+  if(!st.delArmed){st.delArmed=true;$('#delBtn').textContent='Tap again to delete this month';return}
+  try{await removeMonth(key);st.delArmed=false;renderAll();fillForm()}
+  catch(err){formMsg('Could not delete this month. Try again.')}
+}
+async function onPlanSave(){
+  const plan={};let t=0;
+  B.forEach((b)=>{const n=Math.round(num(F['p'+b.k].value));plan[b.k]=n;t+=n});
+  const m=$('#planMsg');
+  if(t!==100){m.textContent='The four shares must add up to 100%. They add up to '+t+'%.';return}
+  try{await persistPlan(plan);m.textContent='';$('#planSave').textContent='Split saved';setTimeout(()=>{$('#planSave').textContent='Save split'},1800)}
+  catch(err){m.textContent='Could not save the split. Try again.'}
+}
+
+/* ---------- selection ---------- */
+function selectMonth(key,scroll){
+  st.sel=key;
+  fillForm();renderAll();
+  if(scroll){$('#form').scrollIntoView({behavior:reduceMotion()?'auto':'smooth',block:'nearest'})}
+}
+function changeFy(d){
+  st.fy+=d;
+  const months=fyMonths(st.fy),now=keyNow();
+  st.sel=months.some((m)=>m.key===now)?now:months[0].key;
+  fillForm();renderAll();
+}
+
+/* ---------- receipts ---------- */
+function issued(){return new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'})}
+function fyCode(fy){return String(fy).slice(2)+String(fy+1).slice(2)}
+function buildMonth(key){
+  const rec=st.records[key],mo=monthInfo(key),fy=mo.m>=3?mo.y:mo.y-1,tot=sumRec(rec);
+  const months=fyMonths(fy);let ytd={sal:0,saved:0,n:0};
+  months.forEach((x)=>{if(x.key<=key&&st.records[x.key]){ytd.n++;ytd.sal+=st.records[x.key].salary;ytd.saved+=sumRec(st.records[x.key])}});
+  const rows=[
+    {t:'center',s:'MY MONEY PLAN',strong:1},
+    {t:'center',s:'Monthly saving receipt'},
+    {t:'rule'},
+    {t:'kv',k:'Receipt no',v:'MP-'+fyCode(fy)+'-'+String(mo.m+1).padStart(2,'0')},
+    {t:'kv',k:'Month',v:mo.full+' '+mo.y},
+    {t:'kv',k:'Plan year',v:fyLabel(fy)},
+    {t:'kv',k:'Issued',v:issued()},
+    {t:'rule'},
+    {t:'kv',k:'Salary credited',v:money(rec.salary),strong:1},
+    {t:'rule'},
+    {t:'center',s:'Saved this month',small:1},
+    {t:'gap'}
+  ];
+  B.forEach((b)=>rows.push({t:'kv',k:b.long,v:money(rec[b.k])}));
+  rows.push({t:'rule'},
+    {t:'kv',k:'TOTAL SAVED',v:money(tot),strong:1},
+    {t:'kv',k:'Saving rate',v:pctOf(tot,rec.salary)},
+    {t:'rule'},
+    {t:'center',s:'Spent this month',small:1},
+    {t:'gap'});
+  S.forEach((s)=>rows.push({t:'kv',k:s.long,v:money(rec[s.k])}));
+  const sp=sumS(rec),bal=(+rec.salary||0)-tot-sp;
+  rows.push({t:'rule'},
+    {t:'kv',k:'TOTAL SPENT',v:money(sp),strong:1},
+    {t:'rule'},
+    {t:'center',s:'Balance check',small:1},
+    {t:'gap'},
+    {t:'kv',k:'Salary credited',v:money(rec.salary)},
+    {t:'kv',k:'Less saved',v:'-'+money(tot)},
+    {t:'kv',k:'Less spent',v:'-'+money(sp)},
+    {t:'kv',k:'BALANCE',v:signed(bal),strong:1},
+    {t:'gap'},
+    {t:'para',s:'Note: '+balNote(bal)},
+    {t:'rule'},
+    {t:'center',s:'Plan year to '+mo.short,small:1},
+    {t:'gap'},
+    {t:'kv',k:'Months recorded',v:ytd.n+' of 12'},
+    {t:'kv',k:'Salary so far',v:money(ytd.sal)},
+    {t:'kv',k:'Saved so far',v:money(ytd.saved)},
+    {t:'kv',k:'Saving rate',v:pctOf(ytd.saved,ytd.sal)},
+    {t:'rule'},
+    {t:'center',s:'Keep this slip with your records.'}
+  );
+  return {rows:rows,file:'money-plan-receipt-'+key+'.html',title:'Receipt '+mo.full+' '+mo.y};
+}
+function buildYear(){
+  const months=fyMonths(st.fy),t={n:0,sal:0,saved:0,spent:0};
+  B.forEach((b)=>{t[b.k]=0});
+  S.forEach((s)=>{t[s.k]=0});
+  const rows=[
+    {t:'center',s:'MY MONEY PLAN',strong:1},
+    {t:'center',s:'Plan year receipt'},
+    {t:'rule'},
+    {t:'kv',k:'Receipt no',v:'MP-'+fyCode(st.fy)+'-YEAR'},
+    {t:'kv',k:'Plan year',v:fyLabel(st.fy)},
+    {t:'kv',k:'Issued',v:issued()},
+    {t:'rule'},
+    {t:'cols',a:'Month',b:'Salary',c:'Saved',head:1}
+  ];
+  months.forEach((mo)=>{
+    const r=st.records[mo.key];if(!r)return;
+    t.n++;t.sal+=r.salary;B.forEach((b)=>{t[b.k]+=+r[b.k]||0});S.forEach((s)=>{t[s.k]+=+r[s.k]||0});
+    rows.push({t:'cols',a:mo.short+' '+mo.y,b:money(r.salary),c:money(sumRec(r))});
+  });
+  t.saved=B.reduce((a,b)=>a+t[b.k],0);
+  t.spent=S.reduce((a,s)=>a+t[s.k],0);
+  const ybal=t.sal-t.saved-t.spent;
+  rows.push({t:'rule'},{t:'center',s:'Saved by purpose',small:1},{t:'gap'});
+  B.forEach((b)=>rows.push({t:'kv',k:b.long,v:money(t[b.k])}));
+  rows.push({t:'rule'},{t:'center',s:'Spent by purpose',small:1},{t:'gap'});
+  S.forEach((s)=>rows.push({t:'kv',k:s.long,v:money(t[s.k])}));
+  rows.push({t:'rule'},
+    {t:'kv',k:'Months recorded',v:t.n+' of 12'},
+    {t:'kv',k:'Total salary',v:money(t.sal)},
+    {t:'kv',k:'TOTAL SAVED',v:money(t.saved),strong:1},
+    {t:'kv',k:'Saving rate',v:pctOf(t.saved,t.sal)},
+    {t:'kv',k:'TOTAL SPENT',v:money(t.spent),strong:1},
+    {t:'kv',k:'BALANCE',v:signed(ybal),strong:1},
+    {t:'gap'},
+    {t:'para',s:'Note: '+balNote(ybal)},
+    {t:'rule'},
+    {t:'center',s:'Keep this slip with your records.'}
+  );
+  return {rows:rows,file:'money-plan-year-'+st.fy+'-'+String(st.fy+1).slice(2)+'.html',title:'Plan year receipt '+fyLabel(st.fy)};
+}
+function rowsToHtml(rows){
+  return rows.map((r)=>{
+    if(r.t==='center')return '<div class="r-c'+(r.strong?' r-b':'')+(r.small?' r-s':'')+'">'+esc(r.s)+'</div>';
+    if(r.t==='rule')return '<div class="r-rule"></div>';
+    if(r.t==='gap')return '<div class="r-gap"></div>';
+    if(r.t==='para')return '<div class="r-p">'+esc(r.s)+'</div>';
+    if(r.t==='kv')return '<div class="r-kv'+(r.strong?' r-b':'')+'"><span>'+esc(r.k)+'</span><span>'+esc(r.v)+'</span></div>';
+    return '<div class="r-cols'+(r.head?' r-h':'')+'"><span>'+esc(r.a)+'</span><span>'+esc(r.b)+'</span><span>'+esc(r.c)+'</span></div>';
+  }).join('');
+}
+function wrapText(s,w){
+  const out=[];let line='';
+  s.split(' ').forEach((word)=>{
+    if((line+' '+word).trim().length>w){out.push(line);line=word}else{line=(line+' '+word).trim()}
+  });
+  if(line)out.push(line);
+  return out.join('\n');
+}
+function rowsToText(rows){
+  const W=34;
+  return rows.map((r)=>{
+    if(r.t==='center'){const s=r.s;return ' '.repeat(Math.max(0,Math.floor((W-s.length)/2)))+s}
+    if(r.t==='rule')return '-'.repeat(W);
+    if(r.t==='gap')return '';
+    if(r.t==='para')return wrapText(r.s,W);
+    if(r.t==='kv'){const sp=Math.max(1,W-r.k.length-r.v.length);return r.k+' '.repeat(sp)+r.v}
+    return r.a.padEnd(8)+r.b.padStart(13)+r.c.padStart(13);
+  }).join('\n');
+}
+function fileHtml(rcpt){
+  const css='body{margin:0;padding:20px 16px 40px;background:#e9ebe7;font-family:"Courier New",ui-monospace,monospace;color:#1b1f1d}'+
+    '.bar{max-width:380px;margin:0 auto 14px}.bar button{width:100%;height:46px;font:600 15px system-ui,sans-serif;background:#0e5a43;color:#fff;border:0;border-radius:8px;cursor:pointer}'+
+    '.receipt{max-width:380px;margin:0 auto;background:#fff;padding:24px 20px 26px;font-size:13px;line-height:1.55}'+
+    '.r-c{text-align:center}.r-b{font-weight:700}.r-s{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}'+
+    '.r-rule{border-top:1px dashed #777;margin:9px 0}.r-gap{height:8px}.r-kv{display:flex;justify-content:space-between;gap:12px}'+
+    '.r-kv span:last-child{text-align:right;white-space:nowrap}.r-cols{display:grid;grid-template-columns:8ch 1fr 1fr;gap:6px}'+
+    '.r-cols span:nth-child(n+2){text-align:right}.r-h{font-weight:700;font-size:11.5px;text-transform:uppercase}.r-p{margin-top:4px}'+
+    '@media print{body{background:#fff;padding:0}.bar{display:none}.receipt{max-width:none;padding:0}}';
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(rcpt.title)+'</title><style>'+css+'</style></head><body><div class="bar"><button onclick="window.print()">Print receipt</button></div><div class="receipt">'+rowsToHtml(rcpt.rows)+'</div></body></html>';
+}
+function openReceipt(kind,key,opener){
+  st.rcpt=kind==='year'?buildYear():buildMonth(key);
+  st.opener=opener||null;
+  $('#receipt').innerHTML=rowsToHtml(st.rcpt.rows);
+  $('#rSave').hidden=!st.dl;
+  $('#rNote').hidden=!st.dl;
+  $('#rCopy').textContent='Copy text';
+  $('#overlay').hidden=false;
+  $('#rClose').focus();
+}
+function closeReceipt(){
+  $('#overlay').hidden=true;
+  if(st.opener&&st.opener.focus)st.opener.focus();
+}
+async function saveReceiptFile(){
+  if(!st.dl||!st.rcpt)return;
+  const b=$('#rSave');
+  try{await st.dl.save({filename:st.rcpt.file,data:fileHtml(st.rcpt)});b.textContent='Saved. Open it and press Print'}
+  catch(e){if(!e||e.code!=='declined'){b.textContent='Could not save the file'}}
+  setTimeout(()=>{b.textContent='Save receipt to print'},3500);
+}
+async function copyReceipt(){
+  const b=$('#rCopy');
+  try{await navigator.clipboard.writeText(rowsToText(st.rcpt.rows));b.textContent='Copied'}
+  catch(e){
+    try{const r=document.createRange();r.selectNodeContents($('#receipt'));const s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected. Copy it now'}
+    catch(e2){b.textContent='Copy not available'}
+  }
+  setTimeout(()=>{b.textContent='Copy text'},2500);
+}
+
+/* ---------- events ---------- */
+function bind(){
+  $('#form').addEventListener('submit',onSave);
+  F.total.addEventListener('input',onTotalInput);
+  F.salary.addEventListener('input',updateLive);
+  B.forEach((b)=>{F[b.k].addEventListener('input',onBucketInput);F['p'+b.k].addEventListener('input',updatePlanTotal)});
+  S.forEach((s)=>{F[s.k].addEventListener('input',updateLive)});
+  $('#delBtn').addEventListener('click',onDelete);
+  $('#viewRcpt').addEventListener('click',(e)=>openReceipt('month',st.sel,e.currentTarget));
+  $('#planSave').addEventListener('click',onPlanSave);
+  $('#fyPrev').addEventListener('click',()=>changeFy(-1));
+  $('#fyNext').addEventListener('click',()=>changeFy(1));
+  $('#chips').addEventListener('click',(e)=>{const c=e.target.closest('.chip');if(c)selectMonth(c.dataset.key,false)});
+  $('#chart').addEventListener('click',(e)=>{const c=e.target.closest('.bcol');if(c)selectMonth(c.dataset.key,true)});
+  $('#tbody').addEventListener('click',(e)=>{
+    const tr=e.target.closest('tr');if(!tr||!tr.dataset.key)return;
+    const btn=e.target.closest('button');
+    if(btn&&btn.dataset.act==='rcpt'&&st.records[tr.dataset.key]){selectMonth(tr.dataset.key,false);openReceipt('month',tr.dataset.key,btn);return}
+    selectMonth(tr.dataset.key,true);
+  });
+  $('#yearRcpt').addEventListener('click',(e)=>{
+    if(!Object.keys(st.records).some((k)=>fyMonths(st.fy).some((m)=>m.key===k))){return}
+    openReceipt('year',null,e.currentTarget);
+  });
+  $('#rClose').addEventListener('click',closeReceipt);
+  $('#rSave').addEventListener('click',saveReceiptFile);
+  $('#rCopy').addEventListener('click',copyReceipt);
+  $('#overlay').addEventListener('click',(e)=>{if(e.target===$('#overlay'))closeReceipt()});
+  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!$('#overlay').hidden)closeReceipt()});
+}
+
+/* ---------- start ---------- */
+function finishLoad(){
+  if(st.loaded)return;
+  st.loaded=true;
+  const months=fyMonths(st.fy),now=keyNow();
+  st.sel=months.some((m)=>m.key===now)?now:months[0].key;
+  fillPlan();fillForm();renderAll();
+}
+function useLocal(){st.mode='local';loadLocal();finishLoad()}
+async function start(){
+  buildForm();bind();
+  const months=fyMonths(st.fy),now=keyNow();
+  st.sel=months.some((m)=>m.key===now)?now:months[0].key;
+  fillForm();fillPlan();renderAll();
+  let db=null,user=null;
+  try{
+    if(window.claude&&window.claude.use){
+      const r=await Promise.all([window.claude.use('db'),window.claude.use('user'),window.claude.use('downloads')]);
+      db=r[0];user=r[1];st.dl=r[2];
+    }
+  }catch(e){}
+  let uid=null;
+  try{uid=user?await user.id():null}catch(e){}
+  if(db&&uid){
+    st.mode='db';
+    try{
+      st.col=db.collection('data/users/'+uid);
+      st.col.onSnapshot((snap)=>{
+        const recs={};let plan=Object.assign({},DEFAULT_PLAN);
+        snap.docs.forEach((d)=>{
+          const data=d.data();if(!data)return;
+          if(d.id==='settings')plan=normPlan(data);
+          else if(d.id.indexOf('m-')===0)recs[d.id.slice(2)]=data;
+        });
+        st.records=recs;st.plan=plan;
+        if(!st.loaded){finishLoad()}
+        else{renderAll();if(!$('#planBox').open)fillPlan()}
+      },()=>{if(!st.loaded)useLocal()});
+      setTimeout(()=>{if(!st.loaded)finishLoad()},6000);
+      return;
+    }catch(e){}
+  }
+  useLocal();
+}
+start();
+})();
+</script>
+
+</body></html>
